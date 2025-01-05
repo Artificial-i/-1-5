@@ -1,0 +1,101 @@
+# تمرین 1 ترم 5
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.preprocessing import StandardScaler,PolynomialFeatures
+%matplotlib inline
+from sklearn.linear_model import LinearRegression
+%matplotlib inline
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import ElasticNet
+import seaborn as sns
+from sklearn import preprocessing
+
+
+df.head(5)
+df.shape()
+df.columns
+df.dtypes
+df.nunique()
+df.info()
+df.describe()
+df.isnull().sum()
+df.corr()
+df.value_counts().to_frame()
+df["loan_amount"].value_counts().to_frame()
+
+
+df['loan_start'] = pd.to_datetime(df['loan_start'].astype('str'), errors='coerce')
+df['loan_amount'] = pd.to_numeric(df['loan_amount'].astype('str'), errors='coerce')
+df['loan_start'] = pd.to_datetime(df['loan_start'].astype('str'), errors='coerce')
+df.rate = pd.to_int64(df.rate)
+df.info()
+
+df.isnull().sum()
+
+
+from sklearn.preprocessing import StandardScaler
+def standard_scaler(df):
+    scaler=StandardScaler()
+    df=scaler.fit_transform(df)
+    return df
+
+df.drop(columns=['client_id','loan_id'])
+
+df.corr(method='pearson',numeric_only=True)
+
+
+X =df[['repaid']]
+y =df['rate']
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.15,random_state=42)
+
+model=LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred=model.predict(X_test)
+r2=r2_score(y_test,y_pred)
+print(f"R-squared:{r2}")
+
+
+
+features=['loan_type','loan_amount','loan_start','loan_end']
+X =df[['repaid']]
+y =df['rate']
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.15,random_state=42)
+
+model=LinearRegression()
+model.fit(X_train, y_train)
+
+y_pred=model.predict(X_test)
+r2=r2_score(y_test,y_pred)
+print(f"R-squared:{r2}")
+
+
+
+features=['loan_type','loan_amount','loan_start','loan_end']
+X =df[['repaid']]
+y =df['rate']
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.15,random_state=42)
+
+model=LinearRegression()
+pf=PolynomialFeatures(degree=3)
+X_train_poly=pf.fit_transform(X_train)
+X_test_poly=pf.fit_transform(X_test)
+model.fit(X_train_poly, y_train)
+model.score(X_test_poly,y_test)
+
+
