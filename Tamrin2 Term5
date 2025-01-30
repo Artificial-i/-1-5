@@ -1,0 +1,267 @@
+Tamrin2 Term5
+
+
+# Tamrin 2 az Term 5
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.preprocessing import StandardScaler,PolynomialFeatures
+%matplotlib inline
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import ElasticNet
+from sklearn import preprocessing
+
+
+55
+
+df=pd.read_csv('used_cars.csv')
+df.head(3)
+
+df.shape
+df.columns
+df.dtypes
+df.info()
+df.nunique()
+# df['buying'].value_counts()
+df.isnull().sum()
+
+# تغییر دیتا تایپ داده ها
+
+df['name'] = df['name'].astype('category')
+df['year'] = df['year'].astype('category')
+df['selling_price'] = df['selling_price'].astype('category')
+df['km_driven'] = df['km_driven'].astype('category')
+df['fuel'] = df['fuel'].astype('category')
+# df['seller_type	'] = df['seller_type	'].astype('category')
+df['transmission'] = df['transmission'].astype('category')
+df['owner'] = df['owner'].astype('category')
+df['mileage'] = df['mileage'].astype('category')
+df['engine'] = df['engine'].astype('category')
+df['torque'] = df['torque'].astype('category')
+df['max_power'] = df['max_power'].astype('category')
+df['seats	'] = df['seats'].astype('category')
+df['seller_type	'] = df['seller_type'].astype('category')
+
+
+df.dtypes
+
+
+# به دست اوردن نال ها
+df.isnull().sum()
+
+# تبدیل نال ها
+df['mileage']=df['mileage'].fillna(df['mileage'].mode()[0])
+df['engine']=df['engine'].fillna(df['engine'].mode()[0])
+df['max_power']=df['max_power'].fillna(df['max_power'].mode()[0])
+df['torque']=df['torque'].fillna(df['torque'].mode()[0])
+df['seats']=df['seats'].fillna(df['seats'].mode()[0])
+df['seats\t']=df['seats\t'].fillna(df['seats\t'].mode()[0])
+
+df.isnull().sum()
+
+#پیدا کردن ولیوهای گم شده روش سوم
+
+df['selling_price'].plot(kind='box')
+plt.show()
+# year
+df['selling_price'].plot(kind='box')
+plt.show()
+
+# حذف دو رکوردپرت
+df=df[(-2< df['selling_price']) & (df['selling_price']<2) & (-2< df['selling_price']) & (df['selling_price']<2)]
+df.shape
+
+# حدف رکورد های غیر ضروری
+df=df.drop(['mileage', 'seller_type'],axis=1)
+df.head()
+
+
+# بررسی توضیع نرمال
+# داده های عددی مورد بررسی قرار میگیرد
+# آیا توضیع نرمال درست اتقاف اقتاده یانه ؟ برای این کار عملیات زیر را انحام میدهیم
+# باید لوگاریت و رادیکال ریت را محاسبه کنیم
+# به این دلیل این دو تا -Log_RateوLog_Sqrt-را آوردیم که هر کدام بهتر باشد ان را جایگزین کنیم
+df['Log_seats'] = np.log(df['seats'])
+df['Sqrt_seats'] = np.sqrt(df['seats'])
+df.head()
+# df.dtypes
+
+# چولگی را باید حساب کنیم
+# هر ستون عددی هست باید اینگونه بررسی شودو گولگی این ستون به
+# دست بیایید
+# هر چه به صفر نزیکتر بشه بهتره هست
+from scipy.stats import skew
+print(f"seats Skewness : {skew(df['seats'])}")
+print(f"Log_seats Skewness : {skew(df['Log_seats'])}")
+print(f"Sqrt_seats Skewness : {skew(df['Sqrt_seats'])}")
+
+# البته به بررسی قبل نمی شود اعتماد کرد لذا این عملیات را انجام می دهیم
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+sns.histplot(x=df['seats'], ax=axes[0])
+sns.histplot(x=df['Log_seats'], ax=axes[1])
+sns.histplot(x=df['Sqrt_seats'], ax=axes[2])
+axes[0].set_title('seats')
+axes[1].set_title('Log_seats')
+
+
+# برای اینکه از بین این سه تا بهترین را انتخاب کنیم میانگین هر سه تا را محاسبه میکنیم تا بهترین میانگین بدست بیایید
+print(f"Mean of rate : {df['seats'].mean()}")
+print(f"Mean of Log_Rate : {df['Log_seats'].mean()}")
+print(f"Mean of Sqrt_Rate : {df['Sqrt_seats'].mean()}")
+
+# اینجا هم حساب کردیم ببینیم ستون ریت چند تا یا چند درصد نزدیک به صفر داریم تا ان بهتر را انتخاب کنیم
+#  ریت را بیاور و ببین بین منفی نیم و مثبت نیم جمعشان چقد میشود که مشخص شده چهل تا از ریت های بین منفی نیم و مثبت نیم هستند در نتیجه  تصمیم گرفتیم که اسکیو ریت را جایگزین این دو کنیم تا نرمال تر شوند دیتاها و به همین دلیل ان دو تا را حذف کردیم
+count= df['Log_seats'].between(-0.5, 0.5).sum()
+print(f"Number of rate values between -0.5 and 0.5 : {count}")
+print(f"{count/df.shape[0]:0.2f}")
+
+# حذف کردن دوتایی که نرمال نبودند و تغییر نام یک ستون
+
+df = df.drop(columns=['seats', 'Log_seats'])
+
+df=df.rename(columns={'Sqrt_seats': 'seats'})
+df.head()
+
+# استاندارد سازی
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+numeric_columns = df.select_dtypes(include=['number']).columns
+df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
+df.head()
+
+from scipy.stats import skew
+print(f"Rate skewness : {skew(df['fuel'])}")
+print(f"Loan Amount Sdewness : {skew(df['fuel'])}")
+
+sns.histplot(df['fuel'], bins=30, kde=True)
+plt.title('Histogram of Rate')
+plt.xlabel('Rate')
+plt.ylabel('Freq')
+plt.show()
+
+
+sns. histplot(df['fuel'], bins=30, kde=True)
+plt.title('Histogram of Rate')
+plt.xlabel('Freq')
+plt.show()
+
+df_dummies = pd.get_dummies(df, columns=['transmission'], prefix='LT', drop_first=False)
+df.head()
+
+# اینکودر کردن داده های کتگوری کال با لیبل این کودر
+from sklearn.preprocessing import LabelEncoder
+
+label_encoder = LabelEncoder()
+encoded_series = pd.Series(label_encoder.fit_transform(df['fuel']), name= 'fuel')
+encoded_series=encoded_series.reset_index(drop=True)
+df= df.reset_index(drop=True)
+df_label = pd.concat([df.drop('fuel', axis=1), encoded_series], axis=1)
+df_label
+df=df_label
+df.head()
+
+
+
+# پیدا کردن ولیوهای گم شده
+# اول ستونههای عددی را بیرون میکشیم
+df_numeric_features=df.select_dtypes(include=['number'])
+print(f"Numeric Features :\n{df_numeric_features}\n")
+
+df_catagory_features=df.select_dtypes(include=["category"])
+print(f"Catigorical Features :\n{df_catagory_features}\n")
+
+df_float64_features=df.select_dtypes(include=['float64'])
+print(f"Float64 Features :\n{df_float64_features}\n")
+
+df_object_features=df.select_dtypes(include=['object'])
+print(f"Object Features :\n{df_object_features}\n")
+
+
+# چسپاندن دیتافریم های بالا به هم
+
+df_catagory_features.reset_index(drop=True, inplace=True)
+df_float64_features.reset_index(drop=True, inplace=True)
+df_object_features.reset_index(drop=True, inplace=True)
+
+df = pd.concat([df_catagory_features, df_float64_features, df_object_features], axis=1)
+df.head()
+
+# اینکودر کردن داده های کتگوری کال با لیبل این کودر
+from sklearn.preprocessing import LabelEncoder
+
+label_encoder = LabelEncoder()
+encoded_series = pd.Series(label_encoder.fit_transform(df['year']), name= 'year')
+encoded_series=encoded_series.reset_index(drop=True)
+df= df.reset_index(drop=True)
+df_label = pd.concat([df.drop('year', axis=1), encoded_series], axis=1)
+df_label
+df=df_label
+df.head()
+
+
+
+# مجموعه ازمون و آموزش
+from sklearn.model_selection import train_test_split
+X = df.drop('seats', axis=1)
+y = df['seats']
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,train_size=0.8, random_state =0)
+X_train.shape , X_test.shape , y_train.shape , y_test.shape
+
+
+
+# بررسی سینگل رگریشن
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+X_train_single = X_train[['Log_seats']]
+X_test_single = X_test[['Log_seats']]
+
+slr_model = LinearRegression()
+slr_model.fit(X_train_single, y_train)
+
+y_pred_single = slr_model.predict(X_test_single)
+
+mse_single = mean_squared_error(y_test, y_pred_single)
+r2_single = r2_score(y_test, y_pred_single)
+
+print(f"MSE: {mse_single}")
+print(f"R2: {r2_single}")
+
+# رگرسیون چند خطی
+mlr_model = LinearRegression()
+mlr_model.fit(X_train, y_train)
+
+y_pred_multi = mlr_model.predict(X_test)
+
+mse_multi = mean_squared_error(y_test, y_pred_multi)
+r2_multi = r2_score(y_test, y_pred_multi)
+
+print(f"MSE: {mse_multi}")
+print(f"R2: {r2_multi}")
+
+# رگرسیون چند جمله ای
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+
+poly_features = PolynomialFeatures(degree=2)
+poly_model = make_pipeline(poly_features, LinearRegression())
+
+poly_model.fit(X_train, y_train)
+
+y_pred_poly = poly_model.predict(X_test)
+
+mse_poly = mean_squared_error(y_test, y_pred_poly)
+r2_poly = r2_score(y_test, y_pred_poly)
+
+print(f"Polynomial Regression (Degree {2}) - MSE: {mse_poly}, R2: {r2_poly}")
